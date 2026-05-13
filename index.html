@@ -504,6 +504,10 @@
   #james-ec-ul > li::before,
   #james-ec-ul > li::after { display: none !important; }
 
+  /* Suppress CSS connector lines for Wyatt's children row — SVG draws all of them */
+  #wyatt-li > ul::before { display: none !important; }
+  #wyatt-li > ul > li::before, #wyatt-li > ul > li::after { display: none !important; }
+
 </style>
 </head>
 <body>
@@ -1002,21 +1006,35 @@
 
     const wyattCard  = document.querySelector('#wyatt-li > .card');
     const anushaCard = document.getElementById('anusha-card');
-    if (!wyattCard || !anushaCard) return;
+    const wrap       = document.getElementById('tree-wrap');
+    if (!wyattCard || !anushaCard || !wrap) return;
 
-    // Use viewport-relative coords (position:fixed SVG on body — bypasses #tree-wrap overflow:auto)
-    const wr = wyattCard.getBoundingClientRect();
-    const ar = anushaCard.getBoundingClientRect();
+    // Use scroll-aware coords relative to tree-wrap (position:absolute SVG inside wrap)
+    const wrapRect = wrap.getBoundingClientRect();
+    const sX = wrap.scrollLeft, sY = wrap.scrollTop;
+    const R = v => Math.round(v);
+    function relD(el) {
+      const r = el.getBoundingClientRect();
+      return {
+        cx:     R(r.left + r.width  / 2 - wrapRect.left + sX),
+        left:   R(r.left               - wrapRect.left + sX),
+        top:    R(r.top                - wrapRect.top  + sY),
+        bottom: R(r.bottom             - wrapRect.top  + sY),
+      };
+    }
 
-    const x1 = wr.left + wr.width / 2;
+    const wr = relD(wyattCard);
+    const ar = relD(anushaCard);
+
+    const x1 = wr.cx;
     const y1 = wr.bottom;
     const x2 = ar.left + 16;
     const y2 = ar.top;
-    const elbowY = (y1 + y2) / 2;
+    const elbowY = Math.round((y1 + y2) / 2);
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.id = 'dual-report-svg';
-    svg.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;overflow:visible;z-index:0;';
+    svg.style.cssText = `position:absolute;top:0;left:0;width:${wrap.scrollWidth}px;height:${wrap.scrollHeight}px;pointer-events:none;overflow:visible;z-index:0;`;
 
     // Arrow marker (grey)
     const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
@@ -1042,14 +1060,15 @@
 
     // Label at horizontal segment
     const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
-    lbl.setAttribute('x', String((x1 + x2) / 2 + 4));
+    lbl.setAttribute('x', String(Math.round((x1 + x2) / 2) + 4));
     lbl.setAttribute('y', String(elbowY - 4));
     lbl.setAttribute('font-size','10'); lbl.setAttribute('fill','#9e9e9e');
     lbl.setAttribute('font-family','Segoe UI,Arial,sans-serif');
     lbl.textContent = 'also reports to';
     svg.appendChild(lbl);
 
-    document.body.appendChild(svg);
+    wrap.style.position = 'relative';
+    wrap.appendChild(svg);
   }
 
   // ── Robert + James co-manager toggle ──
@@ -1138,14 +1157,39 @@
 
     robertUl.classList.add('rj-custom');
 
-    // Wyatt Poff's card — parent above Robert+James; used to draw the vertical connector
-    const poffCardEl = document.querySelector('#wyatt-li > .card');
-    const wyatt      = poffCardEl ? rel(poffCardEl) : null;
+    // ── Wyatt children bar (always drawn — replaces all CSS connectors for this row) ──
+    const poffCardEl      = document.querySelector('#wyatt-li > .card');
+    const wyattUl         = document.querySelector('#wyatt-li > ul');
+    const wyattChildLis   = wyattUl ? Array.from(wyattUl.querySelectorAll(':scope > li')) : [];
+    // [MarkLi, JordanLi, RobertLi, JamesLi]
+    const wyattCardEl     = poffCardEl ? rel(poffCardEl) : null;
 
-    // ══ BOTH CLOSED → nothing to draw ══
+    const markCardEl      = wyattChildLis[0] ? wyattChildLis[0].querySelector(':scope > .card') : null;
+    const jordanCardEl    = wyattChildLis[1] ? wyattChildLis[1].querySelector(':scope > .card') : null;
+    // robertCard and jamesCard already in scope
+
+    let childrenBarPaths = [];
+    if (wyattCardEl && wyattChildLis.length > 0) {
+      const hbarY    = wyattChildLis[0] ? rel(wyattChildLis[0]).top : 0;
+      const childEls = [markCardEl, jordanCardEl, robertCard, jamesCard].filter(Boolean);
+      if (childEls.length >= 2) {
+        const childPos  = childEls.map(c => rel(c));
+        const allCx     = childPos.map(c => c.cx);
+        const hbarLeft  = Math.min(...allCx);
+        const hbarRight = Math.max(...allCx);
+        childrenBarPaths = [
+          `M ${wyattCardEl.cx} ${wyattCardEl.bottom} L ${wyattCardEl.cx} ${hbarY}`,
+          `M ${hbarLeft} ${hbarY} L ${hbarRight} ${hbarY}`,
+          ...childPos.map(c => `M ${c.cx} ${hbarY} L ${c.cx} ${c.top}`),
+        ];
+      }
+    }
+
+    // ══ BOTH CLOSED → just the Wyatt children bar ══
     if (rClosed && jClosed) {
       resetPositions();
       hideEC();
+      if (childrenBarPaths.length) makeSVG(childrenBarPaths.join(' '));
       return;
     }
 
@@ -1166,8 +1210,7 @@
 
       const elbowY2 = robert.bottom + 18;
       makeSVG([
-        // Poff → L-elbow down to Robert's card top, then right to Robert's cx
-        ...(wyatt ? [`M ${wyatt.cx} ${wyatt.bottom} L ${wyatt.cx} ${robert.top} L ${robert.cx} ${robert.top}`] : []),
+        ...childrenBarPaths,
         `M ${robert.cx} ${robert.bottom} L ${robert.cx} ${crewHbarY}`,
         `M ${crewLeft} ${crewHbarY} L ${crewRight} ${crewHbarY}`,
         ...crewPos.map(c => `M ${c.cx} ${crewHbarY} L ${c.cx} ${crewHbarY + stubLen}`),
@@ -1199,13 +1242,11 @@
       const stubLen   = 20;
       const ecElbowY  = jR.bottom + 18;
 
-      // Place EC after the rightmost crew column (mirrors CS on the left)
       showEC(crewRight + 160, jR.bottom + 18);
       const ec = rel(jamesEcUl);
 
       makeSVG([
-        // Poff → L-elbow down to James's card top, then right to James's cx
-        ...(wyatt ? [`M ${wyatt.cx} ${wyatt.bottom} L ${wyatt.cx} ${jR.top} L ${jR.cx} ${jR.top}`] : []),
+        ...childrenBarPaths,
         `M ${james.cx} ${james.bottom} L ${james.cx} ${crewHbarY}`,
         `M ${crewLeft} ${crewHbarY} L ${crewRight} ${crewHbarY}`,
         ...crewPos.map(c => `M ${c.cx} ${crewHbarY} L ${c.cx} ${crewHbarY + stubLen}`),
@@ -1239,18 +1280,14 @@
     const crewRight = crewPos[crewPos.length - 1].cx;
     const midX      = R((crewLeft + crewRight) / 2);
 
-    // Place EC after the rightmost crew column at CS level (mirrors CS on the left)
-    const jR = rel(jamesCard);
     showEC(crewRight + 160, admin.top);
     const ec = rel(jamesEcUl);
 
     makeSVG([
-      // Poff vertical drop + extended horizontal manager bar (Poff.cx → James.cx)
-      ...(wyatt
-        ? [`M ${wyatt.cx} ${wyatt.bottom} L ${wyatt.cx} ${mgrHbarY}`,
-           `M ${wyatt.cx} ${mgrHbarY} L ${james.cx} ${mgrHbarY}`]
-        : [`M ${robert.cx} ${mgrHbarY} L ${james.cx} ${mgrHbarY}`]),
-      // Vertical stubs: Robert card-bottom → mgrHbarY, James card-bottom → mgrHbarY
+      ...childrenBarPaths,
+      // Manager horizontal bar (Robert ↔ James)
+      `M ${robert.cx} ${mgrHbarY} L ${james.cx} ${mgrHbarY}`,
+      // Vertical stubs: each manager card-bottom → mgrHbarY
       `M ${robert.cx} ${robert.bottom} L ${robert.cx} ${mgrHbarY}`,
       `M ${james.cx} ${james.bottom} L ${james.cx} ${mgrHbarY}`,
       // Centre vertical: mgrHbarY → crew horizontal bar
@@ -1344,9 +1381,9 @@
     drawRJLines();
   });
 
-  // Redraw dual-report line on scroll (position:fixed needs viewport coords refreshed)
+  // Redraw both SVGs on scroll (position:absolute in tree-wrap needs scroll-aware refresh)
   const _wrap = document.getElementById('tree-wrap');
-  if (_wrap) _wrap.addEventListener('scroll', () => { drawDualReportLine(); });
+  if (_wrap) _wrap.addEventListener('scroll', () => { drawDualReportLine(); drawRJLines(); });
 </script>
 </body>
 </html>
