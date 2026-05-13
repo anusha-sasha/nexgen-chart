@@ -262,8 +262,10 @@
 
   /* Anusha sits lower — extend vertical stub to reach the card */
   #anusha-li::after { height: 85px !important; }
-  /* Push Anusha and her whole subtree to the right; z-index keeps it above the fixed dotted SVG */
+  /* Push Anusha and her whole subtree to the right; z-index keeps it above SVG */
   #anusha-li { transform: translateX(180px); z-index: 1; }
+  /* Bridge the 180px gap in Ryan's horizontal bar caused by the translateX */
+  #anusha-li::before { left: -180px; }
   .badge-pending { background: #fff3e0; color: #e65100; font-weight: 700; border-radius: 20px; padding: 2px 7px; font-size: 10px; }
   .badge-dual    { background: #ede7f6; color: #4527a0; font-weight: 700; border-radius: 20px; padding: 2px 7px; font-size: 10px; white-space: nowrap; }
 
