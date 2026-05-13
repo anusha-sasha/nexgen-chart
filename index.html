@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Nexgen Enterprises – Organization Chart</title>
+<style>
+  :root {
+    --nge:  #1a3a5c;
+    --ngs:  #1e7a4a;
+    --ngre: #7a4a1e;
+    --ngps: #6b1e7a;
+    --bg:   #f0f4f8;
+    --card: #ffffff;
+    --shadow: 0 2px 8px rgba(0,0,0,.12);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: #222;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, #1a3a5c 0%, #0d2240 100%);
+    color: #fff;
+    padding: 24px 32px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.25);
+  }
+  header .logo {
+    width: 56px; height: 56px;
+    background: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 20px; color: #1a3a5c;
+    flex-shrink: 0;
+  }
+  header h1 { font-size: 26px; font-weight: 700; letter-spacing: .3px; }
+  header p  { font-size: 13px; opacity: .75; margin-top: 3px; }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    padding: 14px 32px;
+    background: #fff;
+    border-bottom: 1px solid #dde4ec;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12.5px; font-weight: 600; color: #333;
+  }
+  .legend-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+  }
+
+  /* ── Controls ── */
+  .controls {
+    padding: 10px 32px;
+    background: #fff;
+    border-bottom: 1px solid #dde4ec;
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  }
+  .controls button {
+    padding: 6px 16px; border-radius: 6px; border: 1.5px solid #1a3a5c;
+    background: #fff; color: #1a3a5c; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: .15s;
+  }
+  .controls button:hover { background: #1a3a5c; color: #fff; }
+  .controls input {
+    padding: 6px 14px; border-radius: 6px; border: 1.5px solid #ccd4de;
+    font-size: 13px; width: 240px;
+  }
+  .controls input:focus { outline: none; border-color: #1a3a5c; }
+
+  /* ── Org tree container ── */
+  #tree-wrap {
+    overflow: auto;
+    padding: 32px 32px 60px;
+  }
+
+  /* ══════════════════════════════════════════
+     CLASSIC TOP-DOWN TREE LAYOUT
+     Parent cards centered above their children row.
+     Connectors: vertical from parent → horizontal bar → vertical stubs to children.
+     ══════════════════════════════════════════ */
+
+  ul.org-tree {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0; margin: 0;
+  }
+
+  /* Each li: card on top, children ul below, centered */
+  ul.org-tree li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding: 0 6px;
+    margin: 0;
+  }
+
+  /* Children row: sits below the parent card with a gap for connectors */
+  ul.org-tree ul {
+    list-style: none;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    padding: 0; margin: 0;
+    margin-top: 40px;
+    position: relative;
+  }
+
+  /* Vertical line from parent card bottom down to horizontal bar */
+  ul.org-tree li > ul::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 40px;
+    background: #c8d4e0;
+  }
+
+  /* Each child li: top padding creates space for the horizontal bar + vertical stub */
+  ul.org-tree ul > li {
+    padding-top: 20px;
+    position: relative;
+  }
+
+  /* Horizontal bar: spans full width of each child's column, trimmed at outer edges */
+  ul.org-tree ul > li::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0; right: 0;
+    height: 2px;
+    background: #c8d4e0;
+  }
+  ul.org-tree ul > li:first-child::before { left: 50%; }
+  ul.org-tree ul > li:last-child::before  { right: 50%; }
+
+  /* Vertical stub: from horizontal bar down to child card */
+  ul.org-tree ul > li::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 20px;
+    background: #c8d4e0;
+  }
+
+  /* ── Card ── */
+  .card {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 10px 14px;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    transition: box-shadow .15s, transform .1s;
+    user-select: none;
+    border-left: none;
+    min-width: 230px;
+    max-width: 310px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .card:hover  { box-shadow: 0 4px 16px rgba(0,0,0,.18); transform: translateY(-2px); }
+  .card.highlight { box-shadow: 0 0 0 3px #f9a825, 0 4px 14px rgba(0,0,0,.18); }
+
+
+  .card-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 14px; color: #fff; flex-shrink: 0;
+    letter-spacing: .3px;
+  }
+  .nge  .card-avatar { background: var(--nge);  }
+  .ngs  .card-avatar { background: var(--ngs);  }
+  .ngre .card-avatar { background: var(--ngre); }
+  .ngps .card-avatar { background: var(--ngps); }
+
+  .card-info { flex: 1; min-width: 0; }
+  .card-name  { font-size: 15px; font-weight: 700; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: .1px; }
+  .card-title { font-size: 12.5px; color: #555; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+  .card-badge {
+    font-size: 9px; font-weight: 700; padding: 2px 7px;
+    border-radius: 20px; background: #eef2f7; color: #444;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .toggle-icon { font-size: 11px; color: #aaa; flex-shrink: 0; margin-left: 2px; }
+
+  /* collapsible — hide the children ul */
+  li > ul.collapsed { display: none; }
+  li.hidden { display: none; }
+
+  /* count badge */
+  .count-badge {
+    font-size: 10px; background: #e8edf3; color: #555;
+    border-radius: 12px; padding: 1px 7px; font-weight: 600;
+  }
+
+  /* Pull James closer to Robert — purely visual shift, SVG redraws to match */
+  #james-li { transform: translateX(-320px); }
+
+  /* 3rd party tag */
+  .third-party-tag {
+    display: inline-block;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.4px;
+    background: #fff3e0; color: #e65100;
+    border: 1px solid #ffb74d;
+    border-radius: 10px; padding: 1px 6px;
+    vertical-align: middle; margin-left: 5px;
+    text-transform: uppercase;
+  }
+
+  /* email line */
+  .card-email {
+    font-size: 11.5px; color: #777; margin-top: 3px;
+    line-height: 1.5; font-weight: 400;
+    word-break: break-all;
+  }
+
+  /* ── NEW: VA/Offshore & Technology teams ── */
+  :root {
+    --va:      #c47a1e;   /* VA / Offshore Operations */
+    --tech:    #1565c0;   /* Technology team */
+    --pending: #757575;   /* Pending / Unverified */
+  }
+  .va      .card-avatar { background: var(--va);      }
+  .tech    .card-avatar { background: var(--tech);    }
+  .pending .card-avatar { background: var(--pending); }
+
+  /* Alert / warning card */
+  .card.alert { }
+  .card.alert .card-avatar { background: #e53935; }
+
+  /* Extra badges */
+  .badge-warn    { background: #ffebee; color: #c62828; font-weight: 800; border-radius: 20px; padding: 2px 7px; font-size: 10px; }
+  .badge-new     { display: none; }
+
+  /* Anusha sits lower — extend vertical stub to reach the card */
+  #anusha-li::after { height: 85px !important; }
+  /* Push Anusha and her whole subtree to the right */
+  #anusha-li { transform: translateX(180px); }
+  .badge-pending { background: #fff3e0; color: #e65100; font-weight: 700; border-radius: 20px; padding: 2px 7px; font-size: 10px; }
+  .badge-dual    { background: #ede7f6; color: #4527a0; font-weight: 700; border-radius: 20px; padding: 2px 7px; font-size: 10px; white-space: nowrap; }
+
+  /* Section heading inside tree */
+  .section-heading {
+    font-size: 11px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase;
+    color: #888; padding: 10px 0 4px 4px;
+  }
+
+  /* ══════════════════════════════════════════
+     TEAM LIST – vertical stair layout (members BELOW parent)
+     Auto-applied to leaf ULs (members with no sub-teams).
+     Parent card sits TOP, members stack VERTICALLY below,
+     connected by a left-side bracket: vertical line down,
+     horizontal arms going right to each member.
+     ══════════════════════════════════════════ */
+
+  /* Parent li: column layout (card top, team below), left-aligned */
+  ul.org-tree li:has(> ul.team-list) {
+    align-items: flex-start;
+  }
+
+  /* Team list container: below parent, indented, with left-bracket space */
+  ul.org-tree ul.team-list {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 20px;
+    margin-left: 20px;
+    padding: 0 0 0 28px;
+  }
+
+  /* Override top-down "40px vertical" → left-side vertical bracket.
+     Height is capped by JS via --tl-bracket-h so it stops at the last arm. */
+  ul.org-tree li > ul.team-list::before {
+    top: 0;
+    bottom: auto;
+    left: 0;
+    height: var(--tl-bracket-h, 100%);
+    width: 2px;
+    transform: none;
+  }
+
+  /* Short vertical connector: parent card bottom → top of bracket */
+  ul.org-tree li > ul.team-list::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -20px;
+    width: 2px;
+    height: 20px;
+    background: #c8d4e0;
+  }
+
+  /* Each team member row */
+  ul.org-tree ul.team-list > li {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  /* Horizontal arm: from bracket → each member card */
+  ul.org-tree ul.team-list > li::before {
+    top: 25px;
+    left: -28px;
+    right: auto;
+    width: 28px;
+    height: 2px;
+  }
+
+  /* Override first/last-child trims (only for top-down siblings) */
+  ul.org-tree ul.team-list > li:first-child::before { left: -28px; }
+  ul.org-tree ul.team-list > li:last-child::before  { right: auto; }
+
+  /* Remove top-down vertical stubs – not needed in team list */
+  ul.org-tree ul.team-list > li::after {
+    display: none;
+  }
+
+  /* ══ CREW COLUMN LAYOUT (Blue / Both / Yellow) ══ */
+  ul.org-tree li:has(> .crew-columns) { align-items: flex-start; }
+  ul.org-tree li > .crew-columns {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: flex-start;
+    margin-top: 20px;
+    margin-left: 20px;
+    padding-left: 28px;
+    position: relative;
+  }
+  ul.org-tree li > .crew-columns.collapsed { display: none; }
+  ul.org-tree li > .crew-columns::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    width: 2px; background: #c8d4e0;
+  }
+  ul.org-tree li > .crew-columns::after {
+    content: '';
+    position: absolute;
+    left: 0; top: -20px;
+    width: 2px; height: 20px; background: #c8d4e0;
+  }
+  .crew-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 240px;
+    padding: 8px 10px 8px 12px;
+    border-radius: 8px;
+    border-left: 3px solid #c8d4e0;
+  }
+  .blue-col   { border-left-color: #4a90d9; background: rgba(74,144,217,.04); }
+  .yellow-col { border-left-color: #f5c518; background: rgba(245,197,24,.04); }
+  .both-col   { border-left-color: #9c27b0; background: rgba(156,39,176,.04); }
+  .crew-item { display: flex; flex-direction: column; }
+
+  /* ── Robert + James co-manager custom layout ── */
+  .rj-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 4px;
+  }
+  .rj-mgr-row {
+    display: flex;
+    gap: 100px;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .rj-mgr-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .rj-bottom-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+    margin-top: 120px;
+    justify-content: center;
+  }
+  .rj-admin {
+    /* sits inside rj-bottom-row */
+  }
+  .rj-crews {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+  }
+
+  /* ── Leaf column: vertical stack of no-child cards ── */
+  .leaf-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 235px;
+  }
+  .leaf-item { display: flex; flex-direction: column; }
+
+  /* ── Department label – header strip inside card ── */
+  .card.has-dept {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+    overflow: hidden;
+  }
+  .card.has-dept .card-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+  .dept-label {
+    font-size: 8.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: #fff;
+    padding: 4px 14px;
+    text-align: center;
+    display: block;
+    width: 100%;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .dept-nge         { background: var(--nge);  }   /* Wyatt, Admin */
+  .dept-ngs         { background: var(--ngs);  }   /* Mark, Robert */
+  .dept-va          { background: var(--va);   }   /* Anusha */
+  .dept-tech        { background: var(--tech); }   /* Prateek */
+  .dept-accounting                        { background: #c8a200 !important; }
+  .card:has(.dept-accounting) .card-avatar { background: #c8a200 !important; }
+
+  /* ── Tech team – same navy as Ryan/Wyatt ── */
+  .tech .card-avatar      { background: var(--nge); }
+  .dept-tech              { background: var(--nge); }
+
+  /* ── Anusha subtree – purple ── */
+  #anusha-li .card-avatar { background: #6b1e7a; }
+  #anusha-li .dept-label  { background: #6b1e7a; }
+  #anusha-card .card-avatar { background: #6b1e7a; }
+  #anusha-card .dept-label  { background: #6b1e7a; }
+  /* accounting cards are always gold, even inside Anusha's section */
+
+  /* ── Jordan subtree – mustard/dark orange ── */
+  #jordan-li .card-avatar { background: #cc7a00; }
+  #jordan-li .dept-label  { background: #cc7a00; }
+
+  /* ── Hide CSS connectors for crew lis (li[1]+); SVG draws all connectors ── */
+  #robert-li > ul.rj-custom::before,
+  #robert-li > ul.rj-custom > li:not(:first-child)::before,
+  #robert-li > ul.rj-custom > li:not(:first-child)::after { display: none; }
+  /* Also suppress admin's (first-child) CSS hbar + stub — SVG handles them */
+  #robert-li > ul.rj-custom > li:first-child::before,
+  #robert-li > ul.rj-custom > li:first-child::after  { display: none; }
+
+  /* Robert closed → hide Customer Service (li[0]) */
+  #robert-li.robert-collapsed > ul > li:first-child { display: none; }
+  /* Both closed → also hide Crews (li[1+]) */
+  #robert-li.robert-collapsed.james-collapsed > ul > li:not(:first-child) { display: none; }
+
+  /* ── Dept labels: CFO, Field Operator, HR – all brown ── */
+  .dept-cfo, .dept-field, .dept-hr { background: #795548; }
+  .card:has(.dept-cfo) .card-avatar,
+  .card:has(.dept-field) .card-avatar,
+  .card:has(.dept-hr) .card-avatar  { background: #795548 !important; }
+
+  /* ── EC – 3rd Party brown ── */
+  .dept-ec { background: #795548; }
+  .card:has(.dept-ec) .card-avatar { background: #795548 !important; }
+
+  /* suppress org-tree connectors on EC branch (SVG handles them) */
+  #james-ec-ul::before,
+  #james-ec-ul > li::before,
+  #james-ec-ul > li::after { display: none !important; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">NE</div>
+  <div>
+    <h1>Nexgen Enterprises &mdash; Organization Chart</h1>
+    <p>Source: SharePoint Jun 2023 + FTF · Teams · RingCentral (Audited 2026-05-07) &nbsp;·&nbsp; 90+ employees across 4 entities + VA/Offshore &amp; Technology teams</p>
+  </div>
+</header>
+
+
+<div class="controls">
+  <input type="text" id="searchBox" placeholder="🔍  Search by name or title…" oninput="searchTree(this.value)" />
+  <button onclick="expandAll()">⊞ Expand All</button>
+  <button onclick="collapseAll()">⊟ Collapse All</button>
+</div>
+
+<div id="tree-wrap">
+<ul class="org-tree" id="root-tree">
+
+  <!-- ═══════ TIER 1: OWNER / PRESIDENT ═══════ -->
+  <li>
+    <div class="card nge has-dept" id="ryan-card" onclick="toggle(this)">
+      <div class="dept-label dept-nge">President</div>
+      <div class="card-row">
+        <div class="card-avatar">RT</div>
+        <div class="card-info">
+          <div class="card-name">Ryan Tyszkow</div>
+          <div class="card-title">Owner / President &nbsp;<span class="count-badge">Since 7/6/2015</span></div>
+          <div style="font-size:10px;color:#888;margin-top:2px;">rtyszkow@nexgensurveying.com</div>
+        </div>
+        <span class="toggle-icon">▼</span>
+      </div>
+    </div>
+
+    <ul>
+
+      <!-- ═══════ LEAF COLUMN – no-child direct reports ═══════ -->
+      <li>
+        <div class="leaf-col">
+          <div class="leaf-item"><div class="card nge has-dept" onclick="toggle(this)"><div class="dept-label dept-hr">HR</div><div class="card-row"><div class="card-avatar">BR</div><div class="card-info"><div class="card-name">Brittany<span class="third-party-tag">3rd Party</span></div><div class="card-title">HR Consulting</div><div style="font-size:10px;color:#888;margin-top:2px;">hrc@nexgenlogix.com</div></div></div></div></div>
+          <div class="leaf-item"><div class="card nge has-dept" onclick="toggle(this)"><div class="dept-label dept-cfo">CFO</div><div class="card-row"><div class="card-avatar">SW</div><div class="card-info"><div class="card-name">Shannon Weinstein<span class="third-party-tag">3rd Party</span></div><div class="card-title">Fractional CFO</div><div style="font-size:10px;color:#888;margin-top:2px;">cfo@nexgenlogix.com</div></div></div></div></div>
+          <div class="leaf-item"><div class="card nge has-dept" onclick="toggle(this)"><div class="dept-label dept-field">Field Operator</div><div class="card-row"><div class="card-avatar">OG</div><div class="card-info"><div class="card-name">Oleg Ghecean<span class="third-party-tag">3rd Party</span></div><div class="card-title">Field / Drone Operator</div><div style="font-size:10px;color:#888;margin-top:2px;">oghecean@nexgen.enterprises</div></div></div></div></div>
+        </div>
+      </li>
+
+      <!-- ═══════ ★ NEW: PRATEEK CHANDRA – CTO / Technology ═══════ -->
+      <li>
+        <div class="card tech has-dept" onclick="toggle(this)">
+          <div class="dept-label dept-tech">CTO</div>
+          <div class="card-row">
+            <div class="card-avatar">PC</div>
+            <div class="card-info">
+              <div class="card-name">Prateek Chandra</div>
+              <div class="card-title">Chief Technology Officer &nbsp;<span class="count-badge">RC Ext 101</span></div>
+              <div style="font-size:10px;color:#888;margin-top:2px;">pchandra@nexgen.enterprises</div>
+            </div>
+            <span class="badge-new">★ NEW</span>
+            <span class="toggle-icon">▼</span>
+          </div>
+        </div>
+        <ul>
+          <li><div class="card tech has-dept" onclick="toggle(this)"><div class="dept-label dept-tech">Technology</div><div class="card-row"><div class="card-avatar">KK</div><div class="card-info"><div class="card-name">Kumar Karuppusamy</div><div class="card-title">IT Admin / Technology &nbsp;<span class="count-badge">RC Ext 129</span></div><div style="font-size:10px;color:#888;margin-top:2px;">kumar_k@nexgenlogix.com</div></div><span class="badge-new">★ NEW</span></div></div></li>
+          <li><div class="card tech has-dept" onclick="toggle(this)"><div class="dept-label dept-tech">Technology</div><div class="card-row"><div class="card-avatar">AB</div><div class="card-info"><div class="card-name">Abhishek Mittal</div><div class="card-title">Developer / Technology</div><div style="font-size:10px;color:#888;margin-top:2px;">abhishek_m@nexgenlogix.com</div></div><span class="badge-new">★ NEW</span></div></div></li>
+          <li><div class="card tech has-dept" onclick="toggle(this)"><div class="dept-label dept-tech">Technology</div><div class="card-row"><div class="card-avatar">VB</div><div class="card-info"><div class="card-name">Veenu Bainsla</div><div class="card-title">Developer / Technology</div><div style="font-size:10px;color:#888;margin-top:2px;">veenu_b@nexgenlogix.com</div></div><span class="badge-new">★ NEW</span></div></div></li>
+          <li><div class="card tech has-dept" onclick="toggle(this)"><div class="dept-label dept-tech">Technology</div><div class="card-row"><div class="card-avatar">SS</div><div class="card-info"><div class="card-name">Sourabh Singh</div><div class="card-title">Developer / Technology</div><div style="font-size:10px;color:#888;margin-top:2px;">sourabh_s@nexgen.enterprises</div></div><span class="badge-new">★ NEW</span></div></div></li>
+          <li><div class="card tech has-dept" onclick="toggle(this)"><div class="dept-label dept-tech">Technology</div><div class="card-row"><div class="card-avatar">TP</div><div class="card-info"><div class="card-name">Tushar Patel</div><div class="card-title">Developer / Technology</div><div style="font-size:10px;color:#888;margin-top:2px;">tushar_p@nexgenlogix.com</div></div></div></div></li>
+          <li><div class="card tech has-dept" onclick="toggle(this)"><div class="dept-label dept-tech">Technology</div><div class="card-row"><div class="card-avatar">VK</div><div class="card-info"><div class="card-name">Vikas Kumar</div><div class="card-title">Developer / Technology</div><div style="font-size:10px;color:#888;margin-top:2px;">vikas_k@nexgenlogix.com</div></div></div></div></li>
+          <li><div class="card tech has-dept" onclick="toggle(this)"><div class="dept-label dept-tech">Technology</div><div class="card-row"><div class="card-avatar">TT</div><div class="card-info"><div class="card-name">Tech Team <span style="font-size:10px;color:#ccc;">(Shared Account)</span></div><div class="card-title">Shared Technology Account</div></div><span class="badge-new">★ SHARED</span></div></div></li>
+        </ul>
+      </li>
+
+      <!-- ═══════ JESSICA DARDEN → MARIA PALOMINO ═══════ -->
+      <li>
+        <div class="card nge has-dept" onclick="toggle(this)">
+          <div class="dept-label dept-accounting">Accounting</div>
+          <div class="card-row">
+            <div class="card-avatar">JD</div>
+            <div class="card-info">
+              <div class="card-name">Jessica Darden</div>
+              <div class="card-title">Billing Admin &nbsp;<span class="count-badge">RC Ext 148</span></div>
+              <div style="font-size:10px;color:#888;margin-top:2px;">jessica@ryantisko.com</div>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+        </div>
+        <ul>
+          <li>
+            <div class="card nge has-dept" onclick="toggle(this)">
+              <div class="dept-label dept-accounting">Accounting</div>
+              <div class="card-row">
+                <div class="card-avatar">MP</div>
+                <div class="card-info">
+                  <div class="card-name">Maria Palomino</div>
+                  <div class="card-title">Office Manager</div>
+                  <div style="font-size:10px;color:#888;margin-top:2px;">maria_p@nexgenlogix.com</div>
+                </div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </li>
+
+      <!-- ═══════ CHRISTINA & SILVIO – separate branch ═══════ -->
+      <li>
+        <div class="leaf-col">
+          <div class="leaf-item"><div class="card nge has-dept" onclick="toggle(this)"><div class="dept-label dept-nge">Operations</div><div class="card-row"><div class="card-avatar">CT</div><div class="card-info"><div class="card-name">Christina Tyszkow</div><div class="card-title">Office &amp; Operations</div><div style="font-size:10px;color:#888;margin-top:2px;">ctyszkow@nexgenenterprisesteam.com</div></div></div></div></div>
+          <div class="leaf-item"><div class="card nge has-dept" onclick="toggle(this)"><div class="dept-label dept-nge">Chief of Staff</div><div class="card-row"><div class="card-avatar">SP</div><div class="card-info"><div class="card-name">Silvio M. Palomino Sr.</div><div class="card-title">Chief of Staff</div><div style="font-size:10px;color:#888;margin-top:2px;">silvio@nexgenlogix.com</div></div></div></div></div>
+        </div>
+      </li>
+
+      <!-- ═══════ TIER 2: VP / COO ═══════ -->
+      <li id="wyatt-li">
+        <div class="card nge has-dept" onclick="toggle(this)">
+          <div class="dept-label dept-nge">Vice President</div>
+          <div class="card-row">
+            <div class="card-avatar">WP</div>
+            <div class="card-info">
+              <div class="card-name">Wyatt Poff</div>
+              <div class="card-title">COO / Vice President &nbsp;<span class="count-badge">Since 8/10/2021</span></div>
+              <div style="font-size:10px;color:#888;margin-top:2px;">wyatt_p@nexgenlogix.com</div>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+        </div>
+
+        <ul>
+
+
+          <!-- Drafting & Survey (Ebersold) — expanded 2026-05-07 audit -->
+          <li>
+            <div class="card ngs has-dept" onclick="toggle(this)">
+              <div class="dept-label dept-ngs">Operations - Drafting</div>
+              <div class="card-row">
+                <div class="card-avatar">ME</div>
+                <div class="card-info">
+                  <div class="card-name">Mark R. Ebersold</div>
+                  <div class="card-title">Drafting &amp; Survey Operations Supervisor</div>
+                  <div style="font-size:10px;color:#888;margin-top:2px;">mark_e@nexgenlogix.com</div>
+                </div>
+                <span class="toggle-icon">▼</span>
+              </div>
+            </div>
+            <ul>
+              <li><div class="card ngs" onclick="toggle(this)"><div class="card-avatar">TL</div><div class="card-info"><div class="card-name">Thomas Lubanovic</div><div class="card-title">Licensed Land Surveyor</div><div style="font-size:10px;color:#888;margin-top:2px;">thomas_l@nexgenlogix.com</div></div><span class="badge-new">★ NEW</span></div></li>
+              <li><div class="card ngs" onclick="toggle(this)"><div class="card-avatar">JW</div><div class="card-info"><div class="card-name">Jonathan Woodson</div><div class="card-title">Survey Coordinator &nbsp;<span class="count-badge">RC Ext 170</span></div><div style="font-size:10px;color:#888;margin-top:2px;">jonathan_w@nexgenlogix.com</div></div><span class="badge-new">★ NEW</span></div></li>
+              <li><div class="card ngs" onclick="toggle(this)"><div class="card-avatar">JR</div><div class="card-info"><div class="card-name">John C. Reynolds</div><div class="card-title">Operations Assistant</div><div style="font-size:10px;color:#888;margin-top:2px;">john_r@nexgenlogix.com</div></div></div></li>
+              <li><div class="card ngs" onclick="toggle(this)"><div class="card-avatar">DW</div><div class="card-info"><div class="card-name">David Winters</div><div class="card-title">Licensed Land Surveyor</div><div style="font-size:10px;color:#888;margin-top:2px;">david_w@nexgenlogix.com</div></div></div></li>
+            </ul>
+          </li>
+
+
+          <!-- ══ NGPS: Project Manager – Jordan Willis ══ -->
+          <li id="jordan-li">
+            <div class="card nge has-dept" onclick="toggle(this)">
+              <div class="dept-label dept-nge">Poffs</div>
+              <div class="card-row">
+                <div class="card-avatar">JW</div>
+                <div class="card-info">
+                  <div class="card-name">Jordan L. Willis</div>
+                  <div class="card-title">Project Manager</div>
+                  <div style="font-size:10px;color:#888;margin-top:2px;">jordan_w@nexgenlogix.com</div>
+                </div>
+                                <span class="toggle-icon">▼</span>
+              </div>
+            </div>
+            <ul>
+              <!-- Matthew E. Hitt – has child -->
+              <li>
+                <div class="card nge has-dept" onclick="toggle(this)">
+                  <div class="dept-label dept-nge">Poffs</div>
+                  <div class="card-row">
+                    <div class="card-avatar">MH</div>
+                    <div class="card-info"><div class="card-name">Matthew E. Hitt</div><div class="card-title">Project Lead</div><div style="font-size:10px;color:#888;margin-top:2px;">matthew_h@nexgenlogix.com</div></div>
+                                        <span class="toggle-icon">▼</span>
+                  </div>
+                </div>
+                <ul>
+                  <li><div class="card nge has-dept" onclick="toggle(this)"><div class="dept-label dept-nge">Poffs</div><div class="card-row"><div class="card-avatar">JG</div><div class="card-info"><div class="card-name">Jacob Gingerich</div><div class="card-title">Mechanic</div></div></div></div></li>
+                  <li><div class="card nge has-dept" onclick="toggle(this)"><div class="dept-label dept-nge">Poffs</div><div class="card-row"><div class="card-avatar">JP</div><div class="card-info"><div class="card-name">Jonathan Pacheco</div><div class="card-title">Mechanic</div></div></div></div></li>
+                  <li><div class="card nge has-dept" onclick="toggle(this)"><div class="dept-label dept-nge">Poffs</div><div class="card-row"><div class="card-avatar">BM</div><div class="card-info"><div class="card-name">Brian Moser</div><div class="card-title">Mechanic</div></div></div></div></li>
+                </ul>
+              </li>
+              <!-- Colton N. Mellor – has children -->
+              <li>
+                <div class="card nge has-dept" onclick="toggle(this)">
+                  <div class="dept-label dept-nge">Poffs</div>
+                  <div class="card-row">
+                    <div class="card-avatar">CM</div>
+                    <div class="card-info"><div class="card-name">Colton N. Mellor</div><div class="card-title">Shop Manager</div><div style="font-size:10px;color:#888;margin-top:2px;">colton_m@nexgenlogix.com</div></div>
+                                        <span class="toggle-icon">▼</span>
+                  </div>
+                </div>
+                <ul>
+                  <li><div class="card nge has-dept" onclick="toggle(this)"><div class="dept-label dept-nge">Poffs</div><div class="card-row"><div class="card-avatar">PS</div><div class="card-info"><div class="card-name">Palmer Moser Sr.</div><div class="card-title">Mechanic</div><div style="font-size:10px;color:#888;margin-top:2px;">palmer_m@nexgenlogix.com</div></div></div></div></li>
+                  <li><div class="card nge has-dept" onclick="toggle(this)"><div class="dept-label dept-nge">Poffs</div><div class="card-row"><div class="card-avatar">PJ</div><div class="card-info"><div class="card-name">Palmer Moser Jr.</div><div class="card-title">Mechanic</div></div></div></div></li>
+                  <li><div class="card nge has-dept" onclick="toggle(this)"><div class="dept-label dept-nge">Poffs</div><div class="card-row"><div class="card-avatar">DL</div><div class="card-info"><div class="card-name">Destin L.</div><div class="card-title">Mechanic</div></div></div></div></li>
+                  <li><div class="card nge has-dept" onclick="toggle(this)"><div class="dept-label dept-nge">Poffs</div><div class="card-row"><div class="card-avatar">JL</div><div class="card-info"><div class="card-name">Jordan Lawson</div><div class="card-title">Mechanic</div></div></div></div></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <!-- ══ ROBERT EVANS ══ -->
+          <li id="robert-li">
+            <div class="card ngs has-dept" id="robert-card" onclick="toggleRobert(this)">
+              <div class="dept-label dept-ngs">Operations</div>
+              <div class="card-row">
+                <div class="card-avatar">RE</div>
+                <div class="card-info">
+                  <div class="card-name">Robert Evans</div>
+                  <div class="card-title">Licensed Land Surveyor &nbsp;<span class="count-badge">RC Ext 172</span></div>
+                  <div style="font-size:10px;color:#888;margin-top:2px;">robert_e@nexgenlogix.com</div>
+                </div>
+                <span class="toggle-icon">▼</span>
+              </div>
+            </div>
+            <ul>
+              <!-- Admin staff (Robert only) -->
+              <li>
+                <div class="leaf-col">
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Customer Service</div><div class="card-row"><div class="card-avatar">HF</div><div class="card-info"><div class="card-name">Haley Fleck</div><div class="card-title">Admin / Surveying &nbsp;<span class="count-badge">RC Ext 159</span></div><div style="font-size:10px;color:#888;margin-top:2px;">haley_f@nexgenlogix.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Customer Service</div><div class="card-row"><div class="card-avatar">TM</div><div class="card-info"><div class="card-name">Tana McGrew</div><div class="card-title">Admin – Nexgen Surveying &nbsp;<span class="count-badge">RC Ext 107</span></div><div style="font-size:10px;color:#888;margin-top:2px;">tana_m@nexgenlogix.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Customer Service</div><div class="card-row"><div class="card-avatar">MM</div><div class="card-info"><div class="card-name">Miguel Mercedes</div><div class="card-title">Admin &nbsp;<span class="count-badge">RC Ext 173</span></div><div style="font-size:10px;color:#888;margin-top:2px;">miguel_m@nexgenlogix.com</div></div></div></div></div>
+                </div>
+              </li>
+              <!-- 🔵 Blue Team -->
+              <li>
+                <div class="leaf-col">
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">AY</div><div class="card-info"><div class="card-name">Andrew Young <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">954-393-6884</span></div><div style="font-size:10px;color:#888;margin-top:2px;">werdna1013@hotmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">AC</div><div class="card-info"><div class="card-name">Anthony Choppa <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">772-867-1778</span></div><div style="font-size:10px;color:#888;margin-top:2px;">anthonychoppa2015@gmail.com · choppasurveying2020@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">BP</div><div class="card-info"><div class="card-name">Byron N. Pena <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">786-226-7147</span></div><div style="font-size:10px;color:#888;margin-top:2px;">byronpena10@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">CW</div><div class="card-info"><div class="card-name">Chauncey William <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">561-907-2397</span></div><div style="font-size:10px;color:#888;margin-top:2px;">chaunceywallace22@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">BG</div><div class="card-info"><div class="card-name">Brian Gonzalez <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">954-329-8258</span></div><div style="font-size:10px;color:#888;margin-top:2px;">gozalezb361@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">DM</div><div class="card-info"><div class="card-name">Diego Manrique <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">954-756-0608 · 561-308-4987</span></div><div style="font-size:10px;color:#888;margin-top:2px;">diegom_07@hotmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">EM</div><div class="card-info"><div class="card-name">Elliot Manrique <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">954-391-2623</span></div><div style="font-size:10px;color:#888;margin-top:2px;">taponte@my.fau.edu</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">JP</div><div class="card-info"><div class="card-name">Jonathan Penny <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">772-812-2150</span></div><div style="font-size:10px;color:#888;margin-top:2px;">Jonathanpennyone@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">JS</div><div class="card-info"><div class="card-name">Juan Salazar <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">704-977-5738</span></div><div style="font-size:10px;color:#888;margin-top:2px;">jsalazarg05@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">JM</div><div class="card-info"><div class="card-name">Juan Manuel Salazar <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">561-596-9523</span></div><div style="font-size:10px;color:#888;margin-top:2px;">Juan.salazarbh@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">RC</div><div class="card-info"><div class="card-name">Richard Calero <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">561-225-5278</span></div><div style="font-size:10px;color:#888;margin-top:2px;">Richardcalero@icloud.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">IS</div><div class="card-info"><div class="card-name">Ivan Salazar <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">772-209-9102</span></div><div style="font-size:10px;color:#888;margin-top:2px;">salazar.1992.21@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">JT</div><div class="card-info"><div class="card-name">Jose Tejada <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">954-488-4931</span></div><div style="font-size:10px;color:#888;margin-top:2px;">tejada47@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">LP</div><div class="card-info"><div class="card-name">Luis Prado <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">786-290-0576</span></div><div style="font-size:10px;color:#888;margin-top:2px;">Luis.Pardo.PTsix@gmail.com</div></div></div></div></div>
+                </div>
+              </li>
+              <!-- 🔵🟡 Both Teams -->
+              <li>
+                <div class="leaf-col">
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">AR</div><div class="card-info"><div class="card-name">Alije Rivero <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span><span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">786-771-9585</span></div><div style="font-size:10px;color:#888;margin-top:2px;">aliejrivero@gmail.com · lafederalsurvey@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">EL</div><div class="card-info"><div class="card-name">Elena Manrique <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span><span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">772-299-8203</span></div><div style="font-size:10px;color:#888;margin-top:2px;">rychkovaleo@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">CL</div><div class="card-info"><div class="card-name">Christopher Lollis <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span><span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">407-257-9889</span></div><div style="font-size:10px;color:#888;margin-top:2px;">CJLLandassociates@gmail.com</div></div></div></div></div>
+                </div>
+              </li>
+              <!-- 🟡 Yellow Team -->
+              <li>
+                <div class="leaf-col">
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">AA</div><div class="card-info"><div class="card-name">Anthony Agosto <span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">727-237-2423</span></div><div style="font-size:10px;color:#888;margin-top:2px;">anthony0434@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">DY</div><div class="card-info"><div class="card-name">David Y. <span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">72-457-9071</span></div><div style="font-size:10px;color:#888;margin-top:2px;">Davidyankay1964@yahoo.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">DR</div><div class="card-info"><div class="card-name">Diego Rocca <span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">786-477-9888</span></div><div style="font-size:10px;color:#888;margin-top:2px;">diego.roca.s@hotmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">JW</div><div class="card-info"><div class="card-name">Joseph Wilson <span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">904-738-1775</span></div><div style="font-size:10px;color:#888;margin-top:2px;">joswilson1977@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">JV</div><div class="card-info"><div class="card-name">John Venezia <span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">754-245-4807</span></div><div style="font-size:10px;color:#888;margin-top:2px;">johnvenezia2561@att.net</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">KS</div><div class="card-info"><div class="card-name">Kurt Schnering <span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">941-374-1150</span></div><div style="font-size:10px;color:#888;margin-top:2px;">kschnering@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">IF</div><div class="card-info"><div class="card-name">Ilya Firsov <span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">407-620-9903</span></div><div style="font-size:10px;color:#888;margin-top:2px;">fifahome78@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">MP</div><div class="card-info"><div class="card-name">Mabel Paradoa <span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">786-340-5448</span></div><div style="font-size:10px;color:#888;margin-top:2px;">Offroadsurvey21@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">RE</div><div class="card-info"><div class="card-name">Raul Elosegui <span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">786-545-9170</span></div><div style="font-size:10px;color:#888;margin-top:2px;">Offroadsurvey21@gmail.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">RM</div><div class="card-info"><div class="card-name">Raymond Mullins <span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">352-238-1378</span></div><div style="font-size:10px;color:#888;margin-top:2px;">raymondjmullins83@yahoo.com</div></div></div></div></div>
+                  <div class="leaf-item"><div class="card ngs has-dept" onclick="toggle(this)"><div class="dept-label dept-ngs">Crew</div><div class="card-row"><div class="card-avatar">RT</div><div class="card-info"><div class="card-name">Ricardo Tomas <span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Field Crew &nbsp;<span class="count-badge">941-952-8116</span></div><div style="font-size:10px;color:#888;margin-top:2px;">compasslandservicesinc@gmail.com</div></div></div></div></div>
+                </div>
+              </li>
+            </ul>
+          </li><!-- end Robert Evans -->
+
+          <!-- ══ JAMES ALLAN MANN ══ -->
+          <li id="james-li">
+            <div class="card ngs has-dept" id="james-card" onclick="toggleJames(this)">
+              <div class="dept-label dept-ngs">Operations</div>
+              <div class="card-row">
+                <div class="card-avatar">JM</div>
+                <div class="card-info">
+                  <div class="card-name">James Allan Mann</div>
+                  <div class="card-title">Survey Coordinator &nbsp;<span class="count-badge">RC Ext 161</span></div>
+                  <div style="font-size:10px;color:#888;margin-top:2px;">allan_m@nexgenlogix.com</div>
+                </div>
+                <span class="toggle-icon" id="james-toggle-icon">▼</span>
+              </div>
+            </div>
+          </li><!-- end James Allan Mann -->
+
+        </ul><!-- end Poff reports -->
+      </li><!-- end Poff -->
+
+      <!-- ═══════ ANUSHA DIGUMARTHI – Operations Manager ═══════ -->
+      <li id="anusha-li">
+        <div style="height:65px;"></div>
+        <div class="card va has-dept" id="anusha-card" onclick="toggle(this)">
+          <div class="dept-label dept-va">Operations</div>
+          <div class="card-row">
+            <div class="card-avatar">AD</div>
+            <div class="card-info">
+              <div class="card-name">Anusha Digumarthi</div>
+              <div class="card-title">Operations Manager &nbsp;<span class="count-badge">RC Ext 146</span></div>
+              <div style="font-size:10px;color:#888;margin-top:2px;">anusha_d@nexgenlogix.com</div>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+        </div>
+        <ul>
+          <!-- Operations - Crew -->
+          <li>
+            <div class="leaf-col">
+              <div class="leaf-item"><div class="card va has-dept" onclick="toggle(this)"><div class="dept-label dept-va">Operations - Crew</div><div class="card-row"><div class="card-avatar">HD</div><div class="card-info"><div class="card-name">Harish D <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Crew Logistics</div><div style="font-size:10px;color:#888;margin-top:2px;">harish_d@nexgenlogix.com</div></div></div></div></div>
+              <div class="leaf-item"><div class="card va has-dept" onclick="toggle(this)"><div class="dept-label dept-va">Operations - Crew</div><div class="card-row"><div class="card-avatar">AL</div><div class="card-info"><div class="card-name">Aldrien Narzabal <span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Crew Logistics</div><div style="font-size:10px;color:#888;margin-top:2px;">aldrien_n@nexgenlogix.com</div></div></div></div></div>
+              <div class="leaf-item"><div class="card va has-dept" onclick="toggle(this)"><div class="dept-label dept-va">Operations - Fieldpack and Delivery</div><div class="card-row"><div class="card-avatar">RR</div><div class="card-info"><div class="card-name">Raul Resuera</div><div class="card-title">Operations Assistant</div><div style="font-size:10px;color:#888;margin-top:2px;">raul_r@nexgen.enterprises</div></div></div></div></div>
+              <div class="leaf-item"><div class="card va has-dept" onclick="toggle(this)"><div class="dept-label dept-va">Operations - Invoice</div><div class="card-row"><div class="card-avatar">SP</div><div class="card-info"><div class="card-name">Sumit Parik</div><div class="card-title">Operations Assistant</div><div style="font-size:10px;color:#888;margin-top:2px;">sumit_parik@nexgenlogix.com</div></div></div></div></div>
+            </div>
+          </li>
+          <!-- Customer Service -->
+          <li>
+            <div class="leaf-col">
+              <div class="leaf-item"><div class="card va has-dept" onclick="toggle(this)"><div class="dept-label dept-va">Customer Service</div><div class="card-row"><div class="card-avatar">SM</div><div class="card-info"><div class="card-name">Sheila Marana <span style="color:#4a90d9;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Customer Service Representative</div><div style="font-size:10px;color:#888;margin-top:2px;">sheila_m@nexgenlogix.com</div></div></div></div></div>
+              <div class="leaf-item"><div class="card va has-dept" onclick="toggle(this)"><div class="dept-label dept-va">Customer Service</div><div class="card-row"><div class="card-avatar">MA</div><div class="card-info"><div class="card-name">Ma April Raen Pagsolingan <span style="color:#f5c518;font-size:18px;font-weight:900;">★</span></div><div class="card-title">Customer Service Representative</div><div style="font-size:10px;color:#888;margin-top:2px;">ma_p@nexgenlogix.com</div></div></div></div></div>
+              <div class="leaf-item"><div class="card va has-dept" onclick="toggle(this)"><div class="dept-label dept-va">Customer Service</div><div class="card-row"><div class="card-avatar">KL</div><div class="card-info"><div class="card-name">Kim Shiela Liabres</div><div class="card-title">Customer Service Representative</div><div style="font-size:10px;color:#888;margin-top:2px;">kim_l@nexgenlogix.com</div></div></div></div></div>
+            </div>
+          </li>
+          <!-- No Team -->
+          <li>
+            <div class="leaf-col">
+              <div class="leaf-item"><div class="card va has-dept" onclick="toggle(this)"><div class="dept-label dept-accounting">Accounting</div><div class="card-row"><div class="card-avatar">MM</div><div class="card-info"><div class="card-name">Mary May Mendoza</div><div class="card-title">Accounting Assistant</div><div style="font-size:10px;color:#888;margin-top:2px;">mary_m@nexgenlogix.com</div></div></div></div></div>
+              <div class="leaf-item"><div class="card va has-dept" onclick="toggle(this)"><div class="dept-label dept-accounting">Accounting</div><div class="card-row"><div class="card-avatar">MM</div><div class="card-info"><div class="card-name">Mary May Moreno</div><div class="card-title">Accounting Assistant</div></div></div></div></div>
+            </div>
+          </li>
+        </ul>
+      </li><!-- end Anusha -->
+
+    </ul><!-- end Ryan reports -->
+  </li>
+
+</ul>
+
+<!-- ══ James exclusive EC branch — positioned absolutely by drawRJLines() ══ -->
+<div id="james-ec-ul" style="display:none; position:absolute; z-index:2;">
+  <div class="leaf-col">
+    <div class="leaf-item">
+      <div class="card nge has-dept" onclick="toggle(this)">
+        <div class="dept-label dept-ec">EC</div>
+        <div class="card-row">
+          <div class="card-avatar">DE</div>
+          <div class="card-info">
+            <div class="card-name">Denise<span class="third-party-tag">3rd Party</span></div>
+            <div class="card-title">Engineering Contractor</div>
+            <div style="font-size:10px;color:#888;margin-top:2px;">denise@inspectionsandengineering.com</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="leaf-item">
+      <div class="card nge has-dept" onclick="toggle(this)">
+        <div class="dept-label dept-ec">EC</div>
+        <div class="card-row">
+          <div class="card-avatar">RO</div>
+          <div class="card-info">
+            <div class="card-name">Roger<span class="third-party-tag">3rd Party</span></div>
+            <div class="card-title">Engineering Contractor</div>
+            <div style="font-size:10px;color:#888;margin-top:2px;">roger@inspectionsandengineering.com</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+  // Generic toggle (all cards except Robert and James)
+  function toggle(card) {
+    const li  = card.parentElement;
+    const sub = li.querySelector(':scope > ul') || li.querySelector(':scope > .crew-columns');
+    const ico = card.querySelector('.toggle-icon');
+    if (!sub) return;
+    const collapsed = sub.classList.toggle('collapsed');
+    if (ico) ico.textContent = collapsed ? '▶' : '▼';
+    requestAnimationFrame(() => requestAnimationFrame(() => { drawDualReportLine(); drawRJLines(); }));
+  }
+
+  // Robert's toggle — controls his own branch state (Customer Service + Crews)
+  // Logic:
+  //   Robert open  → CS visible always; Crews visible (Robert or James open)
+  //   Robert closed → CS hidden; Crews visible only if James is still open
+  function toggleRobert(card) {
+    const ico      = card.querySelector('.toggle-icon');
+    const robertLi = document.getElementById('robert-li');
+    if (!robertLi) return;
+    const collapsed = robertLi.classList.toggle('robert-collapsed');
+    if (ico) ico.textContent = collapsed ? '▶' : '▼';
+    requestAnimationFrame(() => requestAnimationFrame(() => { drawDualReportLine(); drawRJLines(); }));
+  }
+
+  // James's toggle — controls Crews only (Customer Service is Robert-exclusive)
+  // Logic:
+  //   James open  → Crews visible (if at least one of Robert/James is open)
+  //   James closed → Crews visible only if Robert is still open
+  function toggleJames(card) {
+    const ico      = card.querySelector('.toggle-icon');
+    const robertLi = document.getElementById('robert-li');
+    if (!robertLi) return;
+    const collapsed = robertLi.classList.toggle('james-collapsed');
+    if (ico) ico.textContent = collapsed ? '▶' : '▼';
+    requestAnimationFrame(() => requestAnimationFrame(() => { drawDualReportLine(); drawRJLines(); }));
+  }
+
+  function expandAll() {
+    document.querySelectorAll('ul.org-tree ul').forEach(u => u.classList.remove('collapsed'));
+    document.querySelectorAll('.crew-columns').forEach(c => c.classList.remove('collapsed'));
+    const rLi = document.getElementById('robert-li');
+    if (rLi) { rLi.classList.remove('robert-collapsed'); rLi.classList.remove('james-collapsed'); }
+    document.querySelectorAll('.toggle-icon').forEach(i => { if (i.textContent === '▶') i.textContent = '▼'; });
+    const jIco = document.getElementById('james-toggle-icon');
+    if (jIco) jIco.textContent = '▼';
+    requestAnimationFrame(() => requestAnimationFrame(() => { drawDualReportLine(); drawRJLines(); }));
+  }
+
+  function collapseAll() {
+    document.querySelectorAll('ul.org-tree li > ul').forEach(u => u.classList.add('collapsed'));
+    document.querySelectorAll('ul.org-tree li > .crew-columns').forEach(c => c.classList.add('collapsed'));
+    const rLi = document.getElementById('robert-li');
+    if (rLi) { rLi.classList.add('robert-collapsed'); rLi.classList.add('james-collapsed'); }
+    document.querySelectorAll('.toggle-icon').forEach(i => { if (i.textContent === '▼') i.textContent = '▶'; });
+    document.querySelectorAll('#root-tree > li > ul').forEach(u => u.classList.remove('collapsed'));
+    document.querySelectorAll('#root-tree > li > .card .toggle-icon').forEach(i => i.textContent = '▼');
+    const jIco = document.getElementById('james-toggle-icon');
+    if (jIco) jIco.textContent = '▶';
+    requestAnimationFrame(() => requestAnimationFrame(() => { drawDualReportLine(); drawRJLines(); }));
+  }
+
+  function searchTree(query) {
+    const q = query.trim().toLowerCase();
+    document.querySelectorAll('ul.org-tree li').forEach(li => {
+      li.classList.remove('hidden');
+      li.querySelector('.card')?.classList.remove('highlight');
+    });
+    document.querySelectorAll('.crew-item').forEach(ci => {
+      ci.style.display = '';
+      ci.querySelector('.card')?.classList.remove('highlight');
+    });
+    document.querySelectorAll('.leaf-item').forEach(li => {
+      li.style.display = '';
+      li.querySelector('.card')?.classList.remove('highlight');
+    });
+    if (!q) return;
+
+    document.querySelectorAll('ul.org-tree li').forEach(li => {
+      const txt = (li.querySelector('.card')?.innerText || '').toLowerCase();
+      if (!txt.includes(q)) {
+        li.classList.add('hidden');
+      } else {
+        li.querySelector('.card')?.classList.add('highlight');
+        let par = li.parentElement?.closest('li');
+        while (par) {
+          par.classList.remove('hidden');
+          const sub = par.querySelector(':scope > ul') || par.querySelector(':scope > .crew-columns');
+          if (sub) sub.classList.remove('collapsed');
+          par = par.parentElement?.closest('li');
+        }
+      }
+    });
+    // Search crew-col items (Robert Evans crew + Anusha team)
+    document.querySelectorAll('.crew-item').forEach(ci => {
+      const txt = (ci.querySelector('.card')?.innerText || '').toLowerCase();
+      if (!txt.includes(q)) {
+        ci.style.display = 'none';
+      } else {
+        ci.querySelector('.card')?.classList.add('highlight');
+        ci.closest('.crew-columns')?.classList.remove('collapsed');
+        ci.closest('li')?.classList.remove('hidden');
+      }
+    });
+    // Search leaf-col items (no-child direct reports)
+    document.querySelectorAll('.leaf-item').forEach(li => {
+      const txt = (li.querySelector('.card')?.innerText || '').toLowerCase();
+      if (!txt.includes(q)) {
+        li.style.display = 'none';
+      } else {
+        li.querySelector('.card')?.classList.add('highlight');
+        li.closest('li')?.classList.remove('hidden');
+      }
+    });
+  }
+
+  // ── Secondary dotted line: Wyatt → Anusha ("also reports to") ──
+  function drawDualReportLine() {
+    const existing = document.getElementById('dual-report-svg');
+    if (existing) existing.remove();
+
+    const wyattCard  = document.querySelector('#wyatt-li > .card');
+    const anushaCard = document.getElementById('anusha-card');
+    if (!wyattCard || !anushaCard) return;
+
+    // Use viewport-relative coords (position:fixed SVG on body — bypasses #tree-wrap overflow:auto)
+    const wr = wyattCard.getBoundingClientRect();
+    const ar = anushaCard.getBoundingClientRect();
+
+    const x1 = wr.left + wr.width / 2;
+    const y1 = wr.bottom;
+    const x2 = ar.left + 16;
+    const y2 = ar.top;
+    const elbowY = (y1 + y2) / 2;
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.id = 'dual-report-svg';
+    svg.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;overflow:visible;z-index:0;';
+
+    // Arrow marker (grey)
+    const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+    const marker = document.createElementNS('http://www.w3.org/2000/svg','marker');
+    marker.setAttribute('id','arrow-wyatt');
+    marker.setAttribute('markerWidth','8'); marker.setAttribute('markerHeight','8');
+    marker.setAttribute('refX','6'); marker.setAttribute('refY','3');
+    marker.setAttribute('orient','auto');
+    const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    poly.setAttribute('points','0 0, 6 3, 0 6'); poly.setAttribute('fill','#9e9e9e');
+    marker.appendChild(poly); defs.appendChild(marker); svg.appendChild(defs);
+
+    // Wyatt bottom-center → elbow → Anusha top
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', `M ${x1} ${y1} L ${x1} ${elbowY} L ${x2} ${elbowY} L ${x2} ${y2}`);
+    path.setAttribute('stroke','#9e9e9e');
+    path.setAttribute('stroke-width','1.5');
+    path.setAttribute('stroke-dasharray','6,4');
+    path.setAttribute('fill','none');
+    path.setAttribute('opacity','0.9');
+    path.setAttribute('marker-end','url(#arrow-wyatt)');
+    svg.appendChild(path);
+
+    // Label at horizontal segment
+    const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+    lbl.setAttribute('x', String((x1 + x2) / 2 + 4));
+    lbl.setAttribute('y', String(elbowY - 4));
+    lbl.setAttribute('font-size','10'); lbl.setAttribute('fill','#9e9e9e');
+    lbl.setAttribute('font-family','Segoe UI,Arial,sans-serif');
+    lbl.textContent = 'also reports to';
+    svg.appendChild(lbl);
+
+    document.body.appendChild(svg);
+  }
+
+  // ── Robert + James co-manager toggle ──
+  function toggleRJ() {
+    const admin  = document.getElementById('rj-admin');
+    const crews  = document.getElementById('rj-crews');
+    const hidden = crews && crews.classList.toggle('collapsed');
+    if (admin)  admin.classList.toggle('collapsed', hidden);
+    document.querySelectorAll('#robert-li .toggle-icon').forEach(ico => {
+      ico.textContent = hidden ? '▶' : '▼';
+    });
+    setTimeout(drawRJLines, 50);
+  }
+
+  // ── Robert/James co-management connector ──
+  // Visibility rules:
+  //   CS visible  : Robert open
+  //   Crews visible: Robert open OR James open
+  //   Nothing      : both closed
+  function drawRJLines() {
+    const existing = document.getElementById('rj-svg');
+    if (existing) existing.remove();
+
+    const jamesCard  = document.getElementById('james-card');
+    const robertCard = document.getElementById('robert-card');
+    const robertLi   = document.getElementById('robert-li');
+    const wrap       = document.getElementById('tree-wrap');
+    const jamesEcUl  = document.getElementById('james-ec-ul');
+    if (!jamesCard || !robertCard || !robertLi || !wrap) return;
+
+    const robertUl = robertLi.querySelector(':scope > ul');
+    if (!robertUl) return;
+
+    // Determine each manager's open/closed state
+    const ulCollapsed  = robertUl.classList.contains('collapsed');
+    const rClosed = ulCollapsed || robertLi.classList.contains('robert-collapsed');
+    const jClosed = ulCollapsed || robertLi.classList.contains('james-collapsed');
+
+    const allLis  = Array.from(robertUl.querySelectorAll(':scope > li'));
+    const adminLi = allLis[0];
+    const crewLis = allLis.slice(1);
+
+    // Helper: reset all inline transforms/margins
+    function resetPositions() {
+      robertUl.style.transform = '';
+      if (adminLi) adminLi.style.transform = '';
+      crewLis.forEach(li => { li.style.marginTop = ''; li.style.marginLeft = ''; });
+    }
+
+    // Helper: show/hide the EC branch and position it
+    function hideEC() { if (jamesEcUl) jamesEcUl.style.display = 'none'; }
+    function showEC(leftPx, topPx) {
+      if (!jamesEcUl) return;
+      wrap.style.position = 'relative';
+      jamesEcUl.style.display  = '';
+      jamesEcUl.style.position = 'absolute';
+      jamesEcUl.style.left     = leftPx + 'px';
+      jamesEcUl.style.top      = topPx  + 'px';
+    }
+
+    // Helper: build + append SVG
+    const wrapRect = wrap.getBoundingClientRect();
+    const sX = wrap.scrollLeft, sY = wrap.scrollTop;
+    const R = v => Math.round(v);
+    function rel(el) {
+      const r = el.getBoundingClientRect();
+      return {
+        cx:     R(r.left + r.width  / 2 - wrapRect.left + sX),
+        left:   R(r.left               - wrapRect.left + sX),
+        right:  R(r.right              - wrapRect.left + sX),
+        top:    R(r.top                - wrapRect.top  + sY),
+        bottom: R(r.bottom             - wrapRect.top  + sY),
+      };
+    }
+    function makeSVG(d) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.id = 'rj-svg';
+      svg.style.cssText = `position:absolute;top:0;left:0;width:${wrap.scrollWidth}px;height:${wrap.scrollHeight}px;pointer-events:none;overflow:visible;z-index:0;`;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', d); path.setAttribute('stroke','#c8d4e0');
+      path.setAttribute('stroke-width','2'); path.setAttribute('fill','none');
+      svg.appendChild(path);
+      wrap.style.position = 'relative';
+      wrap.appendChild(svg);
+    }
+
+    robertUl.classList.add('rj-custom');
+
+    // ══ BOTH CLOSED → nothing to draw ══
+    if (rClosed && jClosed) {
+      resetPositions();
+      hideEC();
+      return;
+    }
+
+    // ══ ROBERT OPEN, JAMES CLOSED → show Robert's full branch (CS + Crews), hide EC ══
+    if (!rClosed && jClosed) {
+      resetPositions();
+      hideEC();
+      robertUl.style.transform = 'translateY(80px)';
+      crewLis.forEach(li => { li.style.marginTop = '50px'; });
+
+      const robert = rel(robertCard);
+      const admin  = rel(adminLi);
+      const crewPos   = crewLis.map(li => rel(li));
+      const crewHbarY = crewPos[0].top;
+      const crewLeft  = crewPos[0].cx;
+      const crewRight = crewPos[crewPos.length - 1].cx;
+      const stubLen = 20;
+
+      const elbowY2 = robert.bottom + 18;
+      makeSVG([
+        `M ${robert.cx} ${robert.bottom} L ${robert.cx} ${crewHbarY}`,
+        `M ${crewLeft} ${crewHbarY} L ${crewRight} ${crewHbarY}`,
+        ...crewPos.map(c => `M ${c.cx} ${crewHbarY} L ${c.cx} ${crewHbarY + stubLen}`),
+        `M ${robert.cx} ${elbowY2} L ${admin.cx} ${elbowY2} L ${admin.cx} ${admin.top + 20}`,
+      ].join(' '));
+      return;
+    }
+
+    // ══ ROBERT CLOSED, JAMES OPEN → Crews under James + EC to right of James ══
+    if (rClosed && !jClosed) {
+      if (crewLis.length === 0) { hideEC(); return; }
+      resetPositions();
+      robertUl.style.transform = 'translateY(80px)';
+
+      const james = rel(jamesCard);
+      const initCrewPos    = crewLis.map(li => rel(li));
+      const initCrewCenter = R((initCrewPos[0].cx + initCrewPos[initCrewPos.length - 1].cx) / 2);
+      const crewShiftX     = james.cx - initCrewCenter;
+
+      robertUl.style.transform = `translateY(80px) translateX(${crewShiftX}px)`;
+      crewLis.forEach(li => { li.style.marginTop = '50px'; });
+
+      const jR = rel(jamesCard);
+
+      const crewPos   = crewLis.map(li => rel(li));
+      const crewHbarY = crewPos[0].top;
+      const crewLeft  = crewPos[0].cx;
+      const crewRight = crewPos[crewPos.length - 1].cx;
+      const stubLen   = 20;
+      const ecElbowY  = jR.bottom + 18;
+
+      // Place EC after the rightmost crew column (mirrors CS on the left)
+      showEC(crewRight + 160, jR.bottom + 18);
+      const ec = rel(jamesEcUl);
+
+      makeSVG([
+        `M ${james.cx} ${james.bottom} L ${james.cx} ${crewHbarY}`,
+        `M ${crewLeft} ${crewHbarY} L ${crewRight} ${crewHbarY}`,
+        ...crewPos.map(c => `M ${c.cx} ${crewHbarY} L ${c.cx} ${crewHbarY + stubLen}`),
+        `M ${james.cx} ${ecElbowY} L ${ec.cx} ${ecElbowY} L ${ec.cx} ${ec.top + 20}`,
+      ].join(' '));
+      return;
+    }
+
+    // ══ BOTH OPEN → full layout: manager bar + CS left + Crews centre + EC right ══
+    if (crewLis.length === 0) { hideEC(); return; }
+    resetPositions();
+    robertUl.style.transform = 'translateY(80px)';
+
+    const james  = rel(jamesCard);
+    const robert = rel(robertCard);
+    const initCrewPos    = crewLis.map(li => rel(li));
+    const initCrewCenter = R((initCrewPos[0].cx + initCrewPos[initCrewPos.length - 1].cx) / 2);
+    const targetCenter   = R((robert.cx + james.cx) / 2);
+    const crewShiftX     = targetCenter - initCrewCenter;
+
+    robertUl.style.transform = `translateY(80px) translateX(${crewShiftX}px)`;
+    adminLi.style.transform  = `translateX(${-crewShiftX}px)`;
+    crewLis.forEach(li => { li.style.marginTop = '50px'; });
+
+    const admin     = rel(adminLi);
+    const crewPos   = crewLis.map(li => rel(li));
+    const crewHbarY = crewPos[0].top;
+    const mgrHbarY  = Math.max(robert.bottom, james.bottom) + 18;
+    const stubLen   = 20;
+    const crewLeft  = crewPos[0].cx;
+    const crewRight = crewPos[crewPos.length - 1].cx;
+    const midX      = R((crewLeft + crewRight) / 2);
+
+    // Place EC after the rightmost crew column at CS level (mirrors CS on the left)
+    const jR = rel(jamesCard);
+    showEC(crewRight + 160, admin.top);
+    const ec = rel(jamesEcUl);
+
+    makeSVG([
+      `M ${robert.cx} ${robert.bottom} L ${robert.cx} ${mgrHbarY}`,
+      `M ${robert.cx} ${mgrHbarY} L ${james.cx} ${mgrHbarY}`,
+      `M ${james.cx} ${james.bottom} L ${james.cx} ${mgrHbarY}`,
+      `M ${midX} ${mgrHbarY} L ${midX} ${crewHbarY}`,
+      `M ${crewLeft} ${crewHbarY} L ${crewRight} ${crewHbarY}`,
+      ...crewPos.map(c => `M ${c.cx} ${crewHbarY} L ${c.cx} ${crewHbarY + stubLen}`),
+      // L-elbow left from Robert → CS (admin)
+      `M ${robert.cx} ${mgrHbarY} L ${admin.cx} ${mgrHbarY} L ${admin.cx} ${admin.top + 20}`,
+      // L-elbow right from James → EC branch (Denise & Roger)
+      `M ${james.cx} ${mgrHbarY} L ${ec.cx} ${mgrHbarY} L ${ec.cx} ${ec.top + 20}`,
+    ].join(' '));
+  }
+
+  // Set all toggle icons correctly on load
+  document.addEventListener('DOMContentLoaded', () => {
+
+    // Move count-badge (ext/phone) to below email line
+    document.querySelectorAll('.card-info').forEach(info => {
+      const badge = info.querySelector('.card-title .count-badge');
+      if (!badge) return;
+      const text = badge.textContent.trim();
+      badge.remove();
+      const ext = document.createElement('div');
+      ext.style.cssText = 'font-size:10px;color:#aaa;margin-top:1px;';
+      ext.textContent = text;
+      // insert after email div if present, else append
+      const email = info.querySelector('[style*="font-size:10px"]');
+      if (email) email.insertAdjacentElement('afterend', ext);
+      else info.appendChild(ext);
+    });
+
+    // Clean up email divs: add class, split multiple emails
+    document.querySelectorAll('.card-info [style*="color:#888"]').forEach(el => {
+      el.classList.add('card-email');
+      el.removeAttribute('style');
+      if (el.textContent.includes(' · ')) {
+        const parts = el.textContent.split(' · ').map(s => s.trim()).filter(Boolean);
+        el.innerHTML = parts.join('<br>');
+      }
+    });
+
+    // Set toggle icons
+    document.querySelectorAll('ul.org-tree li').forEach(li => {
+      if (li.id === 'james-li') return; // James's icon is set separately below
+      const sub = li.querySelector(':scope > ul') || li.querySelector(':scope > .crew-columns');
+      const ico = li.querySelector(':scope > .card .toggle-icon');
+      if (!ico) return;
+      ico.textContent = sub ? '▼' : '';
+    });
+    // James shares Robert's crew section — always show toggle arrow
+    const jIco = document.getElementById('james-toggle-icon');
+    if (jIco) jIco.textContent = '▼';
+
+    // Apply team-list to ALL ULs except Ryan's and Wyatt's direct-reports rows.
+    const ryanLi   = document.querySelector('#root-tree > li');
+    const wyattLi  = document.querySelector('#wyatt-li');
+    const anushaLi = document.querySelector('#anusha-li');
+    const robertLi = document.querySelector('#robert-li');
+    const jordanLi = document.querySelector('#jordan-li');
+    document.querySelectorAll('ul.org-tree ul').forEach(ul => {
+      if (ul.parentElement === ryanLi)   return;
+      if (ul.parentElement === wyattLi)  return;
+      if (ul.parentElement === anushaLi) return;
+      if (ul.parentElement === robertLi) return;
+      if (ul.parentElement === jordanLi) return;
+      ul.classList.add('team-list');
+    });
+
+    // Stop each team-list bracket exactly at the last item's arm (top:25px from li top)
+    // so the bracket doesn't hang below the last card.
+    requestAnimationFrame(() => {
+      document.querySelectorAll('ul.org-tree ul.team-list').forEach(ul => {
+        const lastLi = ul.querySelector(':scope > li:last-child');
+        if (!lastLi) return;
+        // offsetTop is relative to ul (which is position:relative)
+        ul.style.setProperty('--tl-bracket-h', (lastLi.offsetTop + 27) + 'px');
+      });
+    });
+
+    // Draw dual-report line + RJ connector lines after layout settles
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      drawDualReportLine();
+      drawRJLines();
+    }));
+  });
+
+  // Redraw on window resize
+  window.addEventListener('resize', () => {
+    drawDualReportLine();
+    drawRJLines();
+  });
+
+  // Redraw dual-report line on scroll (position:fixed needs viewport coords refreshed)
+  const _wrap = document.getElementById('tree-wrap');
+  if (_wrap) _wrap.addEventListener('scroll', () => { drawDualReportLine(); });
+</script>
+</body>
+</html>
