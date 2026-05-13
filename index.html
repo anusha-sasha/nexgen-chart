@@ -222,7 +222,7 @@
   }
 
   /* Pull James closer to Robert — purely visual shift, SVG redraws to match */
-  #james-li { transform: translateX(-320px); }
+  #james-li { transform: translateX(-320px); z-index: 1; }
 
   /* 3rd party tag */
   .third-party-tag {
@@ -262,8 +262,8 @@
 
   /* Anusha sits lower — extend vertical stub to reach the card */
   #anusha-li::after { height: 85px !important; }
-  /* Push Anusha and her whole subtree to the right */
-  #anusha-li { transform: translateX(180px); }
+  /* Push Anusha and her whole subtree to the right; z-index keeps it above the fixed dotted SVG */
+  #anusha-li { transform: translateX(180px); z-index: 1; }
   .badge-pending { background: #fff3e0; color: #e65100; font-weight: 700; border-radius: 20px; padding: 2px 7px; font-size: 10px; }
   .badge-dual    { background: #ede7f6; color: #4527a0; font-weight: 700; border-radius: 20px; padding: 2px 7px; font-size: 10px; white-space: nowrap; }
 
@@ -477,6 +477,12 @@
   /* Also suppress admin's (first-child) CSS hbar + stub — SVG handles them */
   #robert-li > ul.rj-custom > li:first-child::before,
   #robert-li > ul.rj-custom > li:first-child::after  { display: none; }
+
+  /* Suppress displaced CSS connector arms on James's li — SVG handles all his connections */
+  #james-li::before, #james-li::after { display: none !important; }
+
+  /* Suppress misaligned CSS connector arms on Robert's li in Poff's row — SVG handles them */
+  #robert-li::before, #robert-li::after { display: none !important; }
 
   /* Robert closed → hide Customer Service (li[0]) */
   #robert-li.robert-collapsed > ul > li:first-child { display: none; }
@@ -1132,6 +1138,10 @@
 
     robertUl.classList.add('rj-custom');
 
+    // Wyatt Poff's card — parent above Robert+James; used to draw the vertical connector
+    const poffCardEl = document.querySelector('#wyatt-li > .card');
+    const wyatt      = poffCardEl ? rel(poffCardEl) : null;
+
     // ══ BOTH CLOSED → nothing to draw ══
     if (rClosed && jClosed) {
       resetPositions();
@@ -1156,6 +1166,8 @@
 
       const elbowY2 = robert.bottom + 18;
       makeSVG([
+        // Poff → L-elbow down to Robert's card top, then right to Robert's cx
+        ...(wyatt ? [`M ${wyatt.cx} ${wyatt.bottom} L ${wyatt.cx} ${robert.top} L ${robert.cx} ${robert.top}`] : []),
         `M ${robert.cx} ${robert.bottom} L ${robert.cx} ${crewHbarY}`,
         `M ${crewLeft} ${crewHbarY} L ${crewRight} ${crewHbarY}`,
         ...crewPos.map(c => `M ${c.cx} ${crewHbarY} L ${c.cx} ${crewHbarY + stubLen}`),
@@ -1192,6 +1204,8 @@
       const ec = rel(jamesEcUl);
 
       makeSVG([
+        // Poff → L-elbow down to James's card top, then right to James's cx
+        ...(wyatt ? [`M ${wyatt.cx} ${wyatt.bottom} L ${wyatt.cx} ${jR.top} L ${jR.cx} ${jR.top}`] : []),
         `M ${james.cx} ${james.bottom} L ${james.cx} ${crewHbarY}`,
         `M ${crewLeft} ${crewHbarY} L ${crewRight} ${crewHbarY}`,
         ...crewPos.map(c => `M ${c.cx} ${crewHbarY} L ${c.cx} ${crewHbarY + stubLen}`),
@@ -1231,10 +1245,17 @@
     const ec = rel(jamesEcUl);
 
     makeSVG([
+      // Poff vertical drop + extended horizontal manager bar (Poff.cx → James.cx)
+      ...(wyatt
+        ? [`M ${wyatt.cx} ${wyatt.bottom} L ${wyatt.cx} ${mgrHbarY}`,
+           `M ${wyatt.cx} ${mgrHbarY} L ${james.cx} ${mgrHbarY}`]
+        : [`M ${robert.cx} ${mgrHbarY} L ${james.cx} ${mgrHbarY}`]),
+      // Vertical stubs: Robert card-bottom → mgrHbarY, James card-bottom → mgrHbarY
       `M ${robert.cx} ${robert.bottom} L ${robert.cx} ${mgrHbarY}`,
-      `M ${robert.cx} ${mgrHbarY} L ${james.cx} ${mgrHbarY}`,
       `M ${james.cx} ${james.bottom} L ${james.cx} ${mgrHbarY}`,
+      // Centre vertical: mgrHbarY → crew horizontal bar
       `M ${midX} ${mgrHbarY} L ${midX} ${crewHbarY}`,
+      // Crew horizontal bar + stubs
       `M ${crewLeft} ${crewHbarY} L ${crewRight} ${crewHbarY}`,
       ...crewPos.map(c => `M ${c.cx} ${crewHbarY} L ${c.cx} ${crewHbarY + stubLen}`),
       // L-elbow left from Robert → CS (admin)
